@@ -7,15 +7,13 @@
     <title>Backups Clásicos vs Modernos</title>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
-        html,
-        body {
+        html {
             height: 100%;
-            overflow-x: hidden;
         }
 
         body {
@@ -23,6 +21,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
@@ -175,6 +174,10 @@
             font-weight: 600;
         }
 
+        .backup-original {
+            background: #3498db;
+        }
+
         .backup-new {
             background: #27ae60;
         }
@@ -246,16 +249,10 @@
 
         .legend {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
-            margin: 20px 0;
+            margin: 15px 0;
             border-left: 4px solid #3498db;
-        }
-
-        .legend h3 {
-            margin: 0 0 15px 0;
-            font-size: 18px;
-            color: #2c3e50;
         }
 
         .legend-items {
@@ -381,7 +378,16 @@
                 </div>
 
                 <div class="files-label">💾 Backups Separados</div>
-                <div class="backup-area" id="classic-backups"></div>
+                <div class="backup-area" id="classic-backups">
+                    <div class="backup-item show">
+                        <div><strong>Día 1 - Completo</strong> (300 MB)</div>
+                        <div class="backup-files">
+                            <div class="backup-file backup-original">A</div>
+                            <div class="backup-file backup-original">B</div>
+                            <div class="backup-file backup-original">C</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="chain-warning" id="classic-warning">
                     ⚠️ Si pierdes el backup incremental del día 2, pierdes los archivos D y E para siempre
@@ -419,7 +425,6 @@
         </div>
 
         <div class="legend">
-            <h3>🎨 Leyenda de Colores</h3>
             <div class="legend-items">
                 <div class="legend-item">
                     <div class="color-box color-original"></div>
@@ -635,7 +640,9 @@
             document.getElementById('classic-files').innerHTML = '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
             document.getElementById('modern-files').innerHTML = '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
 
-            document.getElementById('classic-backups').innerHTML = '';
+            const backupsArea = document.getElementById('classic-backups');
+            backupsArea.innerHTML = '<div class="backup-item show"><div><strong>Día 1 - Completo</strong> (300 MB)</div><div class="backup-files"><div class="backup-file backup-original">A</div><div class="backup-file backup-original">B</div><div class="backup-file backup-original">C</div></div></div>';
+
             document.getElementById('classic-warning').classList.remove('show');
 
             document.getElementById('dedup-blocks').innerHTML = '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
@@ -644,7 +651,6 @@
             updateStats();
         }
     </script>
-
 </body>
 
 </html>
