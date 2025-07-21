@@ -33,22 +33,11 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 40px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         .comparison {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 40px;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
 
         .strategy {
@@ -129,7 +118,7 @@
         }
 
         .backup-area {
-            min-height: 200px;
+            min-height: 150px;
             border: 2px dashed #bdc3c7;
             border-radius: 10px;
             padding: 20px;
@@ -138,14 +127,14 @@
 
         .backup-item {
             background: #ecf0f1;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             border-left: 4px solid #3498db;
             transition: all 0.5s ease;
             opacity: 0;
             transform: translateY(20px);
-            font-size: 20px;
+            font-size: 16px;
         }
 
         .backup-item.show {
@@ -163,7 +152,7 @@
 
         .backup-files {
             display: flex;
-            gap: 4px;
+            gap: 2px;
             margin-top: 8px;
         }
 
@@ -199,7 +188,6 @@
             text-align: center;
             font-size: 20px;
             min-height: 250px;
-            /* Añadido para evitar desborde */
         }
 
         .dedup-blocks {
@@ -209,7 +197,6 @@
             margin: 15px 0;
             justify-content: flex-start;
             align-content: flex-start;
-            /* Añadido para mejor alineación */
         }
 
         .block {
@@ -254,7 +241,9 @@
 
         .duplicated-files-row {
             display: flex;
-            gap: 4px;
+            gap: 2px;
+            justify-content: center;
+            /* Añadido para centrar */
         }
 
         .duplicated-file {
@@ -321,7 +310,7 @@
 
         .legend-items {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
         }
 
@@ -370,6 +359,11 @@
 
         .color-duplicated {
             background: #d35400;
+        }
+
+        #snapshots-info {
+            line-height: 1.5;
+            /* Añadido para mejor legibilidad */
         }
 
         .stats {
@@ -426,7 +420,7 @@
             }
 
             .legend-items {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -434,8 +428,6 @@
 
 <body>
     <div class="container">
-        <h1 class="title">🔄 Backups Clásicos vs Modernos</h1>
-
         <div class="comparison">
             <div class="strategy classic">
                 <h2 class="strategy-title">📁 Estrategia Clásica</h2>
@@ -487,8 +479,8 @@
                         <div class="block unique">B1</div>
                         <div class="block unique">C1</div>
                     </div>
-                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1 (300 MB, 300 MB nuevos)<br><small>(nuevos: 3,
-                            reutilizados: 0)</small></div>
+                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1<br>Tamaño: 300 MB (300 MB
+                        nuevos)<br><small>(nuevos: 3, reutilizados: 0)</small></div>
                     <div class="duplicated-files" id="duplicated-files">
                         <div class="duplicated-files-label">📌 Archivos duplicados en la estrategia clásica</div>
                         <div class="duplicated-files-row" id="duplicated-files-row"></div>
@@ -518,32 +510,32 @@
                     <span>Archivo Original</span>
                 </div>
                 <div class="legend-item">
-                    <div class="color-box color-modified"></div>
-                    <span>Archivo Modificado</span>
-                </div>
-                <div class="legend-item">
                     <div class="color-box color-new"></div>
                     <span>Archivo Nuevo</span>
-                </div>
-                <div class="legend-item">
-                    <div class="color-box color-deleted"></div>
-                    <span>Archivo Eliminado</span>
                 </div>
                 <div class="legend-item">
                     <div class="color-box color-unique"></div>
                     <span>Bloque Nuevo</span>
                 </div>
                 <div class="legend-item">
+                    <div class="color-box color-inactive"></div>
+                    <span>Bloque No Utilizado</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-modified"></div>
+                    <span>Archivo Modificado</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-deleted"></div>
+                    <span>Archivo Eliminado</span>
+                </div>
+                <div class="legend-item">
                     <div class="color-box color-shared"></div>
                     <span>Bloque Reutilizado</span>
                 </div>
                 <div class="legend-item">
-                    <div class="color-box color-inactive"></div>
-                    <span>Bloque No Utilizado en Snapshot</span>
-                </div>
-                <div class="legend-item">
                     <div class="color-box color-duplicated"></div>
-                    <span>Archivo Duplicado (Clásica)</span>
+                    <span>Archivo Duplicado</span>
                 </div>
             </div>
         </div>
@@ -819,15 +811,15 @@
             ).join('+');
 
             document.getElementById('snapshots-info').innerHTML =
-                `📸 Snapshot ${snapshots}: ${snapshotBlocksHtml} (${snapshotSize} MB, ${newBlocksToday * 100} MB nuevos)<br>` +
+                `📸 Snapshot ${snapshots}: ${snapshotBlocksHtml}<br>` +
+                `Tamaño: ${snapshotSize} MB (${newBlocksToday * 100} MB nuevos)<br>` +
                 `<small>(nuevos: ${newBlocksToday}, reutilizados: ${reutilizedBlocks})</small>`;
 
-            // Mostrar archivos duplicados en el Día 4
             const duplicatedFilesContainer = document.getElementById('duplicated-files');
             const duplicatedFilesRow = document.getElementById('duplicated-files-row');
             const duplicationInfo = document.getElementById('duplication-info');
             if (currentDay === 4) {
-                const duplicatedFiles = ['B', 'D', 'E', 'A', 'F']; // Archivos duplicados de días anteriores
+                const duplicatedFiles = ['B', 'D', 'E', 'A', 'F'];
                 duplicatedFilesRow.innerHTML = duplicatedFiles.map(file =>
                     `<div class="duplicated-file">${file}</div>`
                 ).join('');
@@ -873,7 +865,7 @@
             document.getElementById('dedup-blocks').innerHTML =
                 '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
             document.getElementById('snapshots-info').innerHTML =
-                '📸 Snapshot 1: A1+B1+C1 (300 MB, 300 MB nuevos)<br><small>(nuevos: 3, reutilizados: 0)</small>';
+                '📸 Snapshot 1: A1+B1+C1<br>Tamaño: 300 MB (300 MB nuevos)<br><small>(nuevos: 3, reutilizados: 0)</small>';
 
             document.getElementById('duplicated-files').classList.remove('show');
             document.getElementById('duplicated-files-row').innerHTML = '';
