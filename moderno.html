@@ -195,10 +195,11 @@
         }
 
         .dedup-blocks {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 5px;
             margin: 15px 0;
+            justify-content: flex-start;
         }
 
         .block {
@@ -414,7 +415,8 @@
                         <div class="block unique">B1</div>
                         <div class="block unique">C1</div>
                     </div>
-                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1 (nuevos: 3)</div>
+                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1 (300 MB)<br><small>(nuevos: 3, reutilizados:
+                            0)</small></div>
                 </div>
             </div>
         </div>
@@ -617,10 +619,11 @@
                 }
             });
 
+            const snapshotSize = (newBlocks + reutilizedBlocks) * 50;
             modernStorage += newBlocks * 50;
             snapshots++;
 
-            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot ' + snapshots + ': ' + snapshotBlocks.join('+') + ' <br><small>(nuevos: ' + newBlocks + ', reutilizados: ' + reutilizedBlocks + ')</small>';
+            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot ' + snapshots + ': ' + snapshotBlocks.join('+') + ' (' + snapshotSize + ' MB)<br><small>(nuevos: ' + newBlocks + ', reutilizados: ' + reutilizedBlocks + ')</small>';
         }
 
         function updateStats() {
@@ -646,7 +649,7 @@
             document.getElementById('classic-warning').classList.remove('show');
 
             document.getElementById('dedup-blocks').innerHTML = '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
-            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot 1: A1+B1+C1 <br><small>(nuevos: 3, reutilizados: 0)</small>';
+            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot 1: A1+B1+C1 (300 MB)<br><small>(nuevos: 3, reutilizados: 0)</small>';
 
             updateStats();
         }
