@@ -157,6 +157,11 @@
             border-left-color: #f39c12;
         }
 
+        .backup-item.differential {
+            border-left-color: #e67e22;
+            /* Naranja más oscuro para diferenciales */
+        }
+
         .backup-files {
             display: flex;
             gap: 4px;
@@ -225,8 +230,8 @@
         }
 
         .block.inactive {
-            background: #95a5a6;
-            /* Nuevo color para bloques no utilizados */
+            background: #16a085;
+            /* Cyan oscuro para bloques no utilizados */
         }
 
         .controls {
@@ -309,7 +314,7 @@
         }
 
         .color-inactive {
-            background: #95a5a6;
+            background: #16a085;
         }
 
         /* Nuevo color para bloques no utilizados */
@@ -436,9 +441,7 @@
         </div>
 
         <div class="controls">
-            <button type="button" class="btn" onclick="
-
-simulateDay()">⏭️ Simular Siguiente Día</button>
+            <button type="button" class="btn" onclick="simulateDay()">⏭️ Simular Siguiente Día</button>
             <button type="button" class="btn reset" onclick="resetSimulation()">🔄 Reiniciar</button>
         </div>
 
@@ -496,6 +499,7 @@ simulateDay()">⏭️ Simular Siguiente Día</button>
         let classicStorage = 300;
         let modernStorage = 300;
         let snapshots = 1;
+        let changedFilesSinceFull = []; // Almacena archivos nuevos o modificados desde el respaldo completo
 
         const fileChanges = [
             { day: 2, changes: ['B_mod', 'D_new', 'E_new'] },
@@ -558,6 +562,9 @@ simulateDay()">⏭️ Simular Siguiente Día</button>
                     newFile.textContent = file;
                     classicFiles.appendChild(newFile);
                     modernFiles.appendChild(newFile.cloneNode(true));
+                    if (currentDay < 4) { // No añadir cambios del Día 4 al array, ya que se procesan en el diferencial
+                        changedFilesSinceFull.push({ name: file, action: 'new' });
+                    }
                 } else if (action === 'mod') {
                     const existingFiles = classicFiles.querySelectorAll('.file');
                     existingFiles.forEach(f => {
@@ -571,6 +578,9 @@ simulateDay()">⏭️ Simular Siguiente Día</button>
                             f.className = 'file modified';
                         }
                     });
+                    if (currentDay < 4) {
+                        changedFilesSinceFull.push({ name: file, action: 'modified' });
+                    }
                 } else if (action === 'del') {
                     const existingFiles = classicFiles.querySelectorAll('.file');
                     existingFiles.forEach(f => {
@@ -594,30 +604,56 @@ simulateDay()">⏭️ Simular Siguiente Día</button>
             let backupFiles = [];
             let backupSize = 0;
 
-            changes.forEach(change => {
-                const [file, action] = change.split('_');
-                if (action !== 'del') {
-                    backupFiles.push({ name: file, action: action });
-                    backupSize += 100;
-                }
-            });
+            if (currentDay === 4) {
+                // Respaldo diferencial: incluir todos los archivos nuevos o modificados desde el Día 1
+                backupFiles = [...changedFilesSinceFull]; // Copia de archivos modificados/nuevos hasta el Día 3
+                changes.forEach(change => {
+                    const [file, action] = change.split('_');
+                    if (action !== 'del') {
+                        backupFiles.push({ name: file, action: action });
+                    }
+                });
+                backupSize = backupFiles.length * 100;
 
-            classicStorage += backupSize;
+                classicStorage += backupSize;
 
-            const backupItem = document.createElement('div');
-            backupItem.className = 'backup-item incremental';
+                const backupFilesHtml = backupFiles.map(f =>
+                    '<div class="backup-file backup-' + (f.action === 'new' ? 'new' : 'modified') + '">' + f.name + '</div>'
+                ).join('');
 
-            const backupFilesHtml = backupFiles.map(f =>
-                '<div class="backup-file backup-' + (f.action === 'new' ? 'new' : 'modified') + '">' + f.name + '</div>'
-            ).join('');
+                const backupItem = document.createElement('div');
+                backupItem.className = 'backup-item differential';
+                backupItem.innerHTML = '<div><strong>Día ' + currentDay + ' - Diferencial</strong> (' + backupSize + ' MB)</div><div class="backup-files">' + backupFilesHtml + '</div>';
+                backupsArea.appendChild(backupItem);
 
-            backupItem.innerHTML = '<div><strong>Día ' + currentDay + ' - Incremental</strong> (' + backupSize + ' MB)</div><div class="backup-files">' + backupFilesHtml + '</div>';
+                setTimeout(() => {
+                    backupItem.classList.add('show');
+                }, 100);
+            } else {
+                // Respaldo incremental para otros días
+                changes.forEach(change => {
+                    const [file, action] = change.split('_');
+                    if (action !== 'del') {
+                        backupFiles.push({ name: file, action: action });
+                        backupSize += 100;
+                    }
+                });
 
-            backupsArea.appendChild(backupItem);
+                classicStorage += backupSize;
 
-            setTimeout(() => {
-                backupItem.classList.add('show');
-            }, 100);
+                const backupFilesHtml = backupFiles.map(f =>
+                    '<div class="backup-file backup-' + (f.action === 'new' ? 'new' : 'modified') + '">' + f.name + '</div>'
+                ).join('');
+
+                const backupItem = document.createElement('div');
+                backupItem.className = 'backup-item incremental';
+                backupItem.innerHTML = '<div><strong>Día ' + currentDay + ' - Incremental</strong> (' + backupSize + ' MB)</div><div class="backup-files">' + backupFilesHtml + '</div>';
+                backupsArea.appendChild(backupItem);
+
+                setTimeout(() => {
+                    backupItem.classList.add('show');
+                }, 100);
+            }
         }
 
         function simulateModernBackup(changes) {
@@ -684,8 +720,8 @@ simulateDay()">⏭️ Simular Siguiente Día</button>
                 }
             });
 
-            const snapshotSize = snapshotBlocks.length * 100; // 100 MB por bloque
-            modernStorage = 300 + (Array.from(dedupBlocks.querySelectorAll('.block')).length - 3) * 100; // 100 MB por bloque
+            const snapshotSize = snapshotBlocks.length * 100; // 100 MB por bloque en el snapshot
+            modernStorage += newBlocksToday * 100; // Solo los bloques nuevos añaden almacenamiento
             snapshots++;
 
             document.getElementById('snapshots-info').innerHTML =
@@ -708,6 +744,7 @@ simulateDay()">⏭️ Simular Siguiente Día</button>
             classicStorage = 300;
             modernStorage = 300;
             snapshots = 1;
+            changedFilesSinceFull = [];
 
             document.getElementById('classic-files').innerHTML =
                 '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
