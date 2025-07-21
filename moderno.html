@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backups Clásicos vs Modernos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .strategy {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .strategy-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .classic {
+            border: 3px solid #e74c3c;
+        }
+
+        .classic .strategy-title {
+            color: #e74c3c;
+        }
+
+        .modern {
+            border: 3px solid #27ae60;
+        }
+
+        .modern .strategy-title {
+            color: #27ae60;
+        }
+
+        .files-container {
+            margin-bottom: 20px;
+        }
+
+        .files-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #7f8c8d;
+        }
+
+        .files-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .file {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .file.original {
+            background: #3498db;
+        }
+
+        .file.modified {
+            background: #f39c12;
+        }
+
+        .file.new {
+            background: #27ae60;
+        }
+
+        .file.deleted {
+            background: #95a5a6;
+        }
+
+        .backup-area {
+            min-height: 200px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+        }
+
+        .backup-item {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .backup-item.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .backup-item.incremental {
+            border-left-color: #f39c12;
+        }
+
+        .backup-files {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .backup-file {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .backup-new {
+            background: #27ae60;
+        }
+
+        .backup-modified {
+            background: #f39c12;
+        }
+
+        .repository {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .dedup-blocks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 5px;
+            margin: 15px 0;
+        }
+
+        .block {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 12px;
+        }
+
+        .block.unique {
+            background: #e74c3c;
+        }
+
+        .block.shared {
+            background: #9b59b6;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn.reset {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+        }
+
+        .legend {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .legend h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 8px;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-original {
+            background: #3498db;
+        }
+
+        .color-modified {
+            background: #f39c12;
+        }
+
+        .color-new {
+            background: #27ae60;
+        }
+
+        .color-deleted {
+            background: #95a5a6;
+        }
+
+        .color-unique {
+            background: #e74c3c;
+        }
+
+        .color-shared {
+            background: #9b59b6;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .chain-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .chain-warning.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .legend-items {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">🔄 Backups Clásicos vs Modernos</h1>
+
+        <div class="comparison">
+            <div class="strategy classic">
+                <h2 class="strategy-title">📁 Estrategia Clásica</h2>
+
+                <div class="files-container">
+                    <div class="files-label">📋 Sistema de Archivos</div>
+                    <div class="files-row" id="classic-files">
+                        <div class="file original">A</div>
+                        <div class="file original">B</div>
+                        <div class="file original">C</div>
+                    </div>
+                </div>
+
+                <div class="files-label">💾 Backups Separados</div>
+                <div class="backup-area" id="classic-backups"></div>
+
+                <div class="chain-warning" id="classic-warning">
+                    ⚠️ Si pierdes el backup incremental del día 2, pierdes los archivos D y E para siempre
+                </div>
+            </div>
+
+            <div class="strategy modern">
+                <h2 class="strategy-title">🚀 Estrategia Moderna</h2>
+
+                <div class="files-container">
+                    <div class="files-label">📋 Sistema de Archivos</div>
+                    <div class="files-row" id="modern-files">
+                        <div class="file original">A</div>
+                        <div class="file original">B</div>
+                        <div class="file original">C</div>
+                    </div>
+                </div>
+
+                <div class="files-label">🗄️ Repositorio Único con Deduplicación</div>
+                <div class="repository">
+                    <div>💎 Bloques de Datos</div>
+                    <div class="dedup-blocks" id="dedup-blocks">
+                        <div class="block unique">A1</div>
+                        <div class="block unique">B1</div>
+                        <div class="block unique">C1</div>
+                    </div>
+                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1 (nuevos: 3)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button type="button" class="btn" onclick="simulateDay()">⏭️ Simular Siguiente Día</button>
+            <button type="button" class="btn reset" onclick="resetSimulation()">🔄 Reiniciar</button>
+        </div>
+
+        <div class="legend">
+            <h3>🎨 Leyenda de Colores</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="color-box color-original"></div>
+                    <span>Archivo Original</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-modified"></div>
+                    <span>Archivo Modificado</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-new"></div>
+                    <span>Archivo Nuevo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-deleted"></div>
+                    <span>Archivo Eliminado</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-unique"></div>
+                    <span>Bloque Único</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-shared"></div>
+                    <span>Bloque Reutilizado</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="classic-storage">300 MB</div>
+                <div class="stat-label">Clásico - Archivos Separados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="modern-storage">300 MB</div>
+                <div class="stat-label">Moderno - Solo Bloques Únicos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="efficiency">0%</div>
+                <div class="stat-label">Ahorro Real de Espacio</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDay = 1;
+        let classicStorage = 300;
+        let modernStorage = 300;
+        let snapshots = 1;
+
+        const fileChanges = [
+            { day: 2, changes: ['B_mod', 'D_new', 'E_new'] },
+            { day: 3, changes: ['A_mod', 'F_new'] },
+            { day: 4, changes: ['C_del', 'B_mod', 'G_new', 'H_new'] }
+        ];
+
+        function simulateDay() {
+            if (currentDay >= 4) return;
+
+            currentDay++;
+            const dayChanges = fileChanges.find(f => f.day === currentDay);
+            if (!dayChanges) return;
+
+            updateFilesDisplay(dayChanges.changes);
+            simulateClassicBackup(dayChanges.changes);
+            simulateModernBackup(dayChanges.changes);
+            updateStats();
+
+            if (currentDay === 3) {
+                document.getElementById('classic-warning').classList.add('show');
+            }
+        }
+
+        function updateFilesDisplay(changes) {
+            const classicFiles = document.getElementById('classic-files');
+            const modernFiles = document.getElementById('modern-files');
+
+            changes.forEach(change => {
+                const [file, action] = change.split('_');
+
+                if (action === 'new') {
+                    const newFile = document.createElement('div');
+                    newFile.className = 'file new';
+                    newFile.textContent = file;
+                    classicFiles.appendChild(newFile);
+                    modernFiles.appendChild(newFile.cloneNode(true));
+                } else if (action === 'mod') {
+                    const existingFiles = classicFiles.querySelectorAll('.file');
+                    existingFiles.forEach(f => {
+                        if (f.textContent === file) {
+                            f.className = 'file modified';
+                        }
+                    });
+                    const modernExistingFiles = modernFiles.querySelectorAll('.file');
+                    modernExistingFiles.forEach(f => {
+                        if (f.textContent === file) {
+                            f.className = 'file modified';
+                        }
+                    });
+                } else if (action === 'del') {
+                    const existingFiles = classicFiles.querySelectorAll('.file');
+                    existingFiles.forEach(f => {
+                        if (f.textContent === file) {
+                            f.className = 'file deleted';
+                        }
+                    });
+                    const modernExistingFiles = modernFiles.querySelectorAll('.file');
+                    modernExistingFiles.forEach(f => {
+                        if (f.textContent === file) {
+                            f.className = 'file deleted';
+                        }
+                    });
+                }
+            });
+        }
+
+        function simulateClassicBackup(changes) {
+            const backupsArea = document.getElementById('classic-backups');
+
+            let backupFiles = [];
+            let backupSize = 0;
+
+            changes.forEach(change => {
+                const [file, action] = change.split('_');
+                if (action !== 'del') {
+                    backupFiles.push({ name: file, action: action });
+                    backupSize += 100;
+                }
+            });
+
+            classicStorage += backupSize;
+
+            const backupItem = document.createElement('div');
+            backupItem.className = 'backup-item incremental';
+
+            const backupFilesHtml = backupFiles.map(f =>
+                '<div class="backup-file backup-' + (f.action === 'new' ? 'new' : 'modified') + '">' + f.name + '</div>'
+            ).join('');
+
+            backupItem.innerHTML = '<div><strong>Día ' + currentDay + ' - Incremental</strong> (' + backupSize + ' MB)</div><div class="backup-files">' + backupFilesHtml + '</div>';
+
+            backupsArea.appendChild(backupItem);
+
+            setTimeout(() => {
+                backupItem.classList.add('show');
+            }, 100);
+        }
+
+        function simulateModernBackup(changes) {
+            const dedupBlocks = document.getElementById('dedup-blocks');
+
+            let newBlocks = 0;
+            let reutilizedBlocks = 0;
+            let snapshotBlocks = [];
+
+            const currentFiles = document.getElementById('modern-files').querySelectorAll('.file');
+            currentFiles.forEach(file => {
+                const fileName = file.textContent;
+                const hasChange = changes.some(change => change.startsWith(fileName + '_'));
+
+                if (!hasChange && file.className !== 'file deleted') {
+                    snapshotBlocks.push(fileName + '1');
+                    reutilizedBlocks++;
+                }
+            });
+
+            changes.forEach(change => {
+                const [file, action] = change.split('_');
+                if (action === 'new') {
+                    const newBlock = document.createElement('div');
+                    newBlock.className = 'block unique';
+                    newBlock.textContent = file + '1';
+                    dedupBlocks.appendChild(newBlock);
+                    snapshotBlocks.push(file + '1');
+                    newBlocks++;
+                } else if (action === 'mod') {
+                    const newBlock = document.createElement('div');
+                    newBlock.className = 'block unique';
+                    newBlock.textContent = file + '2';
+                    dedupBlocks.appendChild(newBlock);
+                    snapshotBlocks.push(file + '2');
+                    newBlocks++;
+
+                    const existingBlocks = dedupBlocks.querySelectorAll('.block');
+                    existingBlocks.forEach(block => {
+                        if (block.textContent === file + '1') {
+                            block.className = 'block shared';
+                        }
+                    });
+                }
+            });
+
+            modernStorage += newBlocks * 50;
+            snapshots++;
+
+            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot ' + snapshots + ': ' + snapshotBlocks.join('+') + ' <br><small>(nuevos: ' + newBlocks + ', reutilizados: ' + reutilizedBlocks + ')</small>';
+        }
+
+        function updateStats() {
+            document.getElementById('classic-storage').textContent = classicStorage + ' MB';
+            document.getElementById('modern-storage').textContent = modernStorage + ' MB';
+
+            const efficiency = Math.round(((classicStorage - modernStorage) / classicStorage) * 100);
+            document.getElementById('efficiency').textContent = efficiency + '%';
+        }
+
+        function resetSimulation() {
+            currentDay = 1;
+            classicStorage = 300;
+            modernStorage = 300;
+            snapshots = 1;
+
+            document.getElementById('classic-files').innerHTML = '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
+            document.getElementById('modern-files').innerHTML = '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
+
+            document.getElementById('classic-backups').innerHTML = '';
+            document.getElementById('classic-warning').classList.remove('show');
+
+            document.getElementById('dedup-blocks').innerHTML = '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
+            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot 1: A1+B1+C1 <br><small>(nuevos: 3, reutilizados: 0)</small>';
+
+            updateStats();
+        }
+    </script>
+
+</body>
+
+</html>
