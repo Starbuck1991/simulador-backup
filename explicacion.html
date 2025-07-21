@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información de Estrategias de Backup</title>
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .strategy-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .strategy-card.weekly {
+            border-left-color: #e74c3c;
+        }
+
+        .strategy-card.mixed {
+            border-left-color: #9b59b6;
+        }
+
+        .strategy-card.daily_full {
+            border-left-color: #27ae60;
+        }
+
+        .strategy-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .strategy-icon {
+            font-size: 28px;
+            margin-right: 12px;
+        }
+
+        .strategy-description {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .strategy-details {
+            margin-bottom: 15px;
+        }
+
+        .strategy-details h4 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .strategy-details p {
+            margin: 0;
+            font-size: 15px;
+            color: #666;
+        }
+
+        .pros {
+            color: #27ae60;
+        }
+
+        .cons {
+            color: #e74c3c;
+        }
+
+        .risk {
+            color: #f39c12;
+        }
+
+        .risk-level {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .risk-bajo {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .risk-medio {
+            background: #fef5e7;
+            color: #f39c12;
+        }
+
+        .risk-minimo {
+            background: #e8f4fd;
+            color: #3498db;
+        }
+
+        .pattern-visualization {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .pattern-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .pattern-days {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-day {
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 40px;
+        }
+
+        .pattern-completo {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .pattern-incremental {
+            background: #fef5e7;
+            color: #f39c12;
+        }
+
+        .pattern-diferencial {
+            background: #f4ecf7;
+            color: #9b59b6;
+        }
+
+        .comparison-section {
+            background: #f8f9fa;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .comparison-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Estrategias de Backup</h1>
+            <p>Guía completa de las diferentes metodologías de respaldo de datos</p>
+        </div>
+
+        <div class="strategies-grid">
+            <div class="strategy-card weekly">
+                <div class="strategy-title">
+                    <span class="strategy-icon">📅</span>
+                    Estrategia Semanal
+                </div>
+                <div class="strategy-description">
+                    Backup completo los lunes, incrementales el resto de la semana. Común en empresas.
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="pros">✅ Ventajas:</h4>
+                    <p>Equilibrio entre espacio y tiempo</p>
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="cons">⚠️ Desventajas:</h4>
+                    <p>Recuperación requiere múltiples backups</p>
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="risk">🔒 Nivel de riesgo:</h4>
+                    <span class="risk-level risk-medio">Medio</span>
+                </div>
+
+                <div class="pattern-visualization">
+                    <div class="pattern-title">Patrón Semanal</div>
+                    <div class="pattern-days">
+                        <div class="pattern-day pattern-completo">L</div>
+                        <div class="pattern-day pattern-incremental">M</div>
+                        <div class="pattern-day pattern-incremental">X</div>
+                        <div class="pattern-day pattern-incremental">J</div>
+                        <div class="pattern-day pattern-incremental">V</div>
+                        <div class="pattern-day pattern-incremental">S</div>
+                        <div class="pattern-day pattern-incremental">D</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="strategy-card mixed">
+                <div class="strategy-title">
+                    <span class="strategy-icon">🔄</span>
+                    Estrategia Mixta
+                </div>
+                <div class="strategy-description">
+                    Combina todos los tipos: Completo el lunes, diferencial miércoles y viernes, incremental otros días.
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="pros">✅ Ventajas:</h4>
+                    <p>Mejor balance para recuperación</p>
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="cons">⚠️ Desventajas:</h4>
+                    <p>Más complejo de gestionar</p>
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="risk">🔒 Nivel de riesgo:</h4>
+                    <span class="risk-level risk-bajo">Bajo</span>
+                </div>
+
+                <div class="pattern-visualization">
+                    <div class="pattern-title">Patrón Semanal</div>
+                    <div class="pattern-days">
+                        <div class="pattern-day pattern-completo">L</div>
+                        <div class="pattern-day pattern-incremental">M</div>
+                        <div class="pattern-day pattern-diferencial">X</div>
+                        <div class="pattern-day pattern-incremental">J</div>
+                        <div class="pattern-day pattern-diferencial">V</div>
+                        <div class="pattern-day pattern-incremental">S</div>
+                        <div class="pattern-day pattern-incremental">D</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="strategy-card daily_full">
+                <div class="strategy-title">
+                    <span class="strategy-icon">💾</span>
+                    Backup Completo Diario
+                </div>
+                <div class="strategy-description">
+                    Backup completo todos los días. Máxima seguridad pero costoso en espacio y tiempo.
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="pros">✅ Ventajas:</h4>
+                    <p>Recuperación inmediata desde cualquier día</p>
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="cons">⚠️ Desventajas:</h4>
+                    <p>Muy costoso en espacio y tiempo</p>
+                </div>
+
+                <div class="strategy-details">
+                    <h4 class="risk">🔒 Nivel de riesgo:</h4>
+                    <span class="risk-level risk-minimo">Mínimo</span>
+                </div>
+
+                <div class="pattern-visualization">
+                    <div class="pattern-title">Patrón Semanal</div>
+                    <div class="pattern-days">
+                        <div class="pattern-day pattern-completo">L</div>
+                        <div class="pattern-day pattern-completo">M</div>
+                        <div class="pattern-day pattern-completo">X</div>
+                        <div class="pattern-day pattern-completo">J</div>
+                        <div class="pattern-day pattern-completo">V</div>
+                        <div class="pattern-day pattern-completo">S</div>
+                        <div class="pattern-day pattern-completo">D</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="comparison-title">📊 Comparación de Estrategias</h2>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Característica</th>
+                            <th>Semanal</th>
+                            <th>Mixta</th>
+                            <th>Completo Diario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Espacio requerido</strong></td>
+                            <td>Medio</td>
+                            <td>Medio-Alto</td>
+                            <td>Muy Alto</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tiempo de backup</strong></td>
+                            <td>Rápido (después del lunes)</td>
+                            <td>Variable</td>
+                            <td>Lento (todos los días)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Velocidad de recuperación</strong></td>
+                            <td>Lenta (múltiples archivos)</td>
+                            <td>Media</td>
+                            <td>Muy Rápida</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Complejidad</strong></td>
+                            <td>Baja</td>
+                            <td>Alta</td>
+                            <td>Muy Baja</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Riesgo de pérdida</strong></td>
+                            <td>Medio</td>
+                            <td>Bajo</td>
+                            <td>Mínimo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Uso recomendado</strong></td>
+                            <td>Empresas medianas</td>
+                            <td>Entornos críticos</td>
+                            <td>Datos ultra-críticos</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
