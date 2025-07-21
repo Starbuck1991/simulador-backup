@@ -224,6 +224,11 @@
             background: #9b59b6;
         }
 
+        .block.inactive {
+            background: #95a5a6;
+            /* Nuevo color para bloques no utilizados */
+        }
+
         .controls {
             text-align: center;
             margin: 30px 0;
@@ -302,6 +307,12 @@
         .color-shared {
             background: #9b59b6;
         }
+
+        .color-inactive {
+            background: #95a5a6;
+        }
+
+        /* Nuevo color para bloques no utilizados */
 
         .stats {
             display: grid;
@@ -393,7 +404,8 @@
                 </div>
 
                 <div class="chain-warning" id="classic-warning">
-                    ⚠️ Si pierdes el backup incremental del día 2, pierdes los archivos D y E para siempre
+                    ⚠️ Si pierdes el respaldo incremental del día 2, los archivos D y E no podrán recuperarse, ya que
+                    solo están en ese respaldo y no en el respaldo completo del día 1.
                 </div>
             </div>
 
@@ -424,7 +436,9 @@
         </div>
 
         <div class="controls">
-            <button type="button" class="btn" onclick="simulateDay()">⏭️ Simular Siguiente Día</button>
+            <button type="button" class="btn" onclick="
+
+simulateDay()">⏭️ Simular Siguiente Día</button>
             <button type="button" class="btn reset" onclick="resetSimulation()">🔄 Reiniciar</button>
         </div>
 
@@ -454,6 +468,10 @@
                     <div class="color-box color-shared"></div>
                     <span>Bloque Reutilizado</span>
                 </div>
+                <div class="legend-item">
+                    <div class="color-box color-inactive"></div>
+                    <span>Bloque No Utilizado</span>
+                </div>
             </div>
         </div>
 
@@ -482,7 +500,7 @@
         const fileChanges = [
             { day: 2, changes: ['B_mod', 'D_new', 'E_new'] },
             { day: 3, changes: ['A_mod', 'F_new'] },
-            { day: 4, changes: ['C_del', 'B_mod', 'G_new', 'H_new'] }
+            { day: 4, changes: ['C_del', 'G_new', 'H_new'] }
         ];
 
         function simulateDay() {
@@ -506,8 +524,33 @@
             const classicFiles = document.getElementById('classic-files');
             const modernFiles = document.getElementById('modern-files');
 
+            // Resetear todos los archivos existentes a "original"
+            const allClassicFiles = classicFiles.querySelectorAll('.file');
+            const allModernFiles = modernFiles.querySelectorAll('.file');
+
+            allClassicFiles.forEach(f => {
+                if (f.className !== 'file deleted') {
+                    f.className = 'file original';
+                }
+            });
+            allModernFiles.forEach(f => {
+                if (f.className !== 'file deleted') {
+                    f.className = 'file original';
+                }
+            });
+
+            // Aplicar cambios del día actual
             changes.forEach(change => {
                 const [file, action] = change.split('_');
+
+                // Validar que el archivo existe para modificaciones o eliminaciones
+                const existingFiles = classicFiles.querySelectorAll('.file');
+                const fileExists = Array.from(existingFiles).some(f => f.textContent === file);
+
+                if ((action === 'mod' || action === 'del') && !fileExists) {
+                    console.warn(`El archivo ${file} no existe para la acción ${action}`);
+                    return;
+                }
 
                 if (action === 'new') {
                     const newFile = document.createElement('div');
@@ -579,60 +622,84 @@
 
         function simulateModernBackup(changes) {
             const dedupBlocks = document.getElementById('dedup-blocks');
-
-            let newBlocks = 0;
+            let newBlocksToday = 0;
             let reutilizedBlocks = 0;
             let snapshotBlocks = [];
 
+            // Obtener todos los archivos que existen (no eliminados)
             const currentFiles = document.getElementById('modern-files').querySelectorAll('.file');
-            currentFiles.forEach(file => {
-                const fileName = file.textContent;
-                const hasChange = changes.some(change => change.startsWith(fileName + '_'));
+            const activeFiles = Array.from(currentFiles)
+                .filter(file => file.className !== 'file deleted')
+                .map(file => file.textContent);
 
-                if (!hasChange && file.className !== 'file deleted') {
+            // Para cada archivo activo, determinar qué bloque necesita
+            activeFiles.forEach(fileName => {
+                const isModifiedToday = changes.some(change => change === fileName + '_mod');
+                const isNewToday = changes.some(change => change === fileName + '_new');
+
+                if (isNewToday) {
+                    const newBlock = document.createElement('div');
+                    newBlock.className = 'block unique';
+                    newBlock.textContent = fileName + '1';
+                    dedupBlocks.appendChild(newBlock);
                     snapshotBlocks.push(fileName + '1');
-                    reutilizedBlocks++;
+                    newBlocksToday++;
+                } else if (isModifiedToday) {
+                    const existingVersions = Array.from(dedupBlocks.querySelectorAll('.block'))
+                        .filter(b => b.textContent.startsWith(fileName))
+                        .map(b => parseInt(b.textContent.replace(fileName, '')))
+                        .filter(v => !isNaN(v));
+
+                    const nextVersion = existingVersions.length > 0 ? Math.max(...existingVersions) + 1 : 2;
+                    const newBlock = document.createElement('div');
+                    newBlock.className = 'block unique';
+                    newBlock.textContent = fileName + nextVersion;
+                    dedupBlocks.appendChild(newBlock);
+                    snapshotBlocks.push(fileName + nextVersion);
+                    newBlocksToday++;
+                } else {
+                    const existingBlocks = Array.from(dedupBlocks.querySelectorAll('.block'))
+                        .filter(b => b.textContent.startsWith(fileName))
+                        .map(b => b.textContent);
+
+                    if (existingBlocks.length > 0) {
+                        const latestBlock = existingBlocks[existingBlocks.length - 1];
+                        snapshotBlocks.push(latestBlock);
+                        reutilizedBlocks++;
+                    }
                 }
             });
 
-            changes.forEach(change => {
-                const [file, action] = change.split('_');
-                if (action === 'new') {
-                    const newBlock = document.createElement('div');
-                    newBlock.className = 'block unique';
-                    newBlock.textContent = file + '1';
-                    dedupBlocks.appendChild(newBlock);
-                    snapshotBlocks.push(file + '1');
-                    newBlocks++;
-                } else if (action === 'mod') {
-                    const newBlock = document.createElement('div');
-                    newBlock.className = 'block unique';
-                    newBlock.textContent = file + '2';
-                    dedupBlocks.appendChild(newBlock);
-                    snapshotBlocks.push(file + '2');
-                    newBlocks++;
-
-                    const existingBlocks = dedupBlocks.querySelectorAll('.block');
-                    existingBlocks.forEach(block => {
-                        if (block.textContent === file + '1') {
-                            block.className = 'block shared';
-                        }
+            // Colorear los bloques según su uso en este snapshot
+            const allBlocks = dedupBlocks.querySelectorAll('.block');
+            allBlocks.forEach(block => {
+                if (snapshotBlocks.includes(block.textContent)) {
+                    const isNewToday = changes.some(change => {
+                        const [file, action] = change.split('_');
+                        return block.textContent.startsWith(file) && (action === 'new' || action === 'mod');
                     });
+                    block.className = isNewToday ? 'block unique' : 'block shared';
+                } else {
+                    block.className = 'block inactive';
                 }
             });
 
-            const snapshotSize = (newBlocks + reutilizedBlocks) * 50;
-            modernStorage += newBlocks * 50;
+            const snapshotSize = snapshotBlocks.length * 100; // 100 MB por bloque
+            modernStorage = 300 + (Array.from(dedupBlocks.querySelectorAll('.block')).length - 3) * 100; // 100 MB por bloque
             snapshots++;
 
-            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot ' + snapshots + ': ' + snapshotBlocks.join('+') + ' (' + snapshotSize + ' MB)<br><small>(nuevos: ' + newBlocks + ', reutilizados: ' + reutilizedBlocks + ')</small>';
+            document.getElementById('snapshots-info').innerHTML =
+                '📸 Snapshot ' + snapshots + ': ' + snapshotBlocks.join('+') + ' (' + snapshotSize + ' MB)<br>' +
+                '<small>(nuevos hoy: ' + newBlocksToday + ', reutilizados: ' + reutilizedBlocks + ')</small>';
         }
 
         function updateStats() {
             document.getElementById('classic-storage').textContent = classicStorage + ' MB';
             document.getElementById('modern-storage').textContent = modernStorage + ' MB';
 
-            const efficiency = Math.round(((classicStorage - modernStorage) / classicStorage) * 100);
+            const efficiency = classicStorage > 0
+                ? ((classicStorage - modernStorage) / classicStorage * 100).toFixed(1)
+                : 0;
             document.getElementById('efficiency').textContent = efficiency + '%';
         }
 
@@ -642,16 +709,23 @@
             modernStorage = 300;
             snapshots = 1;
 
-            document.getElementById('classic-files').innerHTML = '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
-            document.getElementById('modern-files').innerHTML = '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
+            document.getElementById('classic-files').innerHTML =
+                '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
+            document.getElementById('modern-files').innerHTML =
+                '<div class="file original">A</div><div class="file original">B</div><div class="file original">C</div>';
 
             const backupsArea = document.getElementById('classic-backups');
-            backupsArea.innerHTML = '<div class="backup-item show"><div><strong>Día 1 - Completo</strong> (300 MB)</div><div class="backup-files"><div class="backup-file backup-original">A</div><div class="backup-file backup-original">B</div><div class="backup-file backup-original">C</div></div></div>';
+            backupsArea.innerHTML =
+                '<div class="backup-item show"><div><strong>Día 1 - Completo</strong> (300 MB)</div>' +
+                '<div class="backup-files"><div class="backup-file backup-original">A</div>' +
+                '<div class="backup-file backup-original">B</div><div class="backup-file backup-original">C</div></div></div>';
 
             document.getElementById('classic-warning').classList.remove('show');
 
-            document.getElementById('dedup-blocks').innerHTML = '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
-            document.getElementById('snapshots-info').innerHTML = '📸 Snapshot 1: A1+B1+C1 (300 MB)<br><small>(nuevos: 3, reutilizados: 0)</small>';
+            document.getElementById('dedup-blocks').innerHTML =
+                '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
+            document.getElementById('snapshots-info').innerHTML =
+                '📸 Snapshot 1: A1+B1+C1 (300 MB)<br><small>(nuevos: 3, reutilizados: 0)</small>';
 
             updateStats();
         }
