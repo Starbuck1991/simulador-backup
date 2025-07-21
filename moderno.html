@@ -159,7 +159,6 @@
 
         .backup-item.differential {
             border-left-color: #e67e22;
-            /* Naranja más oscuro para diferenciales */
         }
 
         .backup-files {
@@ -199,6 +198,8 @@
             color: white;
             text-align: center;
             font-size: 20px;
+            min-height: 250px;
+            /* Añadido para evitar desborde */
         }
 
         .dedup-blocks {
@@ -207,6 +208,8 @@
             gap: 5px;
             margin: 15px 0;
             justify-content: flex-start;
+            align-content: flex-start;
+            /* Añadido para mejor alineación */
         }
 
         .block {
@@ -231,7 +234,55 @@
 
         .block.inactive {
             background: #16a085;
-            /* Cyan oscuro para bloques no utilizados */
+        }
+
+        .duplicated-files {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .duplicated-files.show {
+            display: block;
+        }
+
+        .duplicated-files-label {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #ecf0f1;
+        }
+
+        .duplicated-files-row {
+            display: flex;
+            gap: 4px;
+        }
+
+        .duplicated-file {
+            width: 35px;
+            height: 35px;
+            border-radius: 4px;
+            background: #d35400;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .duplication-info {
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            color: #2c3e50;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .duplication-info.show {
+            display: block;
         }
 
         .controls {
@@ -317,7 +368,9 @@
             background: #16a085;
         }
 
-        /* Nuevo color para bloques no utilizados */
+        .color-duplicated {
+            background: #d35400;
+        }
 
         .stats {
             display: grid;
@@ -434,8 +487,21 @@
                         <div class="block unique">B1</div>
                         <div class="block unique">C1</div>
                     </div>
-                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1 (300 MB)<br><small>(nuevos: 3, reutilizados:
-                            0)</small></div>
+                    <div id="snapshots-info">📸 Snapshot 1: A1+B1+C1 (300 MB, 300 MB nuevos)<br><small>(nuevos: 3,
+                            reutilizados: 0)</small></div>
+                    <div class="duplicated-files" id="duplicated-files">
+                        <div class="duplicated-files-label">📌 Archivos duplicados en la estrategia clásica</div>
+                        <div class="duplicated-files-row" id="duplicated-files-row"></div>
+                    </div>
+                    <div class="duplication-info" id="duplication-info">
+                        En la estrategia clásica, el respaldo diferencial del Día 4 incluye los archivos B, D, E, A, F,
+                        G, H (700 MB). Los archivos B, D, E, A, F están duplicados de respaldos anteriores, lo que
+                        garantiza que estos datos estén en múltiples copias, ofreciendo una "doble protección". Sin
+                        embargo, esta duplicación ocupa más espacio (500 MB adicionales), complica la restauración al
+                        requerir múltiples respaldos y puede introducir inconsistencias si un respaldo está corrupto. La
+                        estrategia moderna almacena cada bloque solo una vez, simplificando la restauración y ahorrando
+                        espacio.
+                    </div>
                 </div>
             </div>
         </div>
@@ -465,7 +531,7 @@
                 </div>
                 <div class="legend-item">
                     <div class="color-box color-unique"></div>
-                    <span>Bloque Único</span>
+                    <span>Bloque Nuevo</span>
                 </div>
                 <div class="legend-item">
                     <div class="color-box color-shared"></div>
@@ -473,7 +539,11 @@
                 </div>
                 <div class="legend-item">
                     <div class="color-box color-inactive"></div>
-                    <span>Bloque No Utilizado</span>
+                    <span>Bloque No Utilizado en Snapshot</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box color-duplicated"></div>
+                    <span>Archivo Duplicado (Clásica)</span>
                 </div>
             </div>
         </div>
@@ -499,7 +569,7 @@
         let classicStorage = 300;
         let modernStorage = 300;
         let snapshots = 1;
-        let changedFilesSinceFull = []; // Almacena archivos nuevos o modificados desde el respaldo completo
+        let changedFilesSinceFull = [];
 
         const fileChanges = [
             { day: 2, changes: ['B_mod', 'D_new', 'E_new'] },
@@ -528,7 +598,6 @@
             const classicFiles = document.getElementById('classic-files');
             const modernFiles = document.getElementById('modern-files');
 
-            // Resetear todos los archivos existentes a "original"
             const allClassicFiles = classicFiles.querySelectorAll('.file');
             const allModernFiles = modernFiles.querySelectorAll('.file');
 
@@ -543,11 +612,9 @@
                 }
             });
 
-            // Aplicar cambios del día actual
             changes.forEach(change => {
                 const [file, action] = change.split('_');
 
-                // Validar que el archivo existe para modificaciones o eliminaciones
                 const existingFiles = classicFiles.querySelectorAll('.file');
                 const fileExists = Array.from(existingFiles).some(f => f.textContent === file);
 
@@ -562,7 +629,7 @@
                     newFile.textContent = file;
                     classicFiles.appendChild(newFile);
                     modernFiles.appendChild(newFile.cloneNode(true));
-                    if (currentDay < 4) { // No añadir cambios del Día 4 al array, ya que se procesan en el diferencial
+                    if (currentDay < 4) {
                         changedFilesSinceFull.push({ name: file, action: 'new' });
                     }
                 } else if (action === 'mod') {
@@ -605,14 +672,17 @@
             let backupSize = 0;
 
             if (currentDay === 4) {
-                // Respaldo diferencial: incluir todos los archivos nuevos o modificados desde el Día 1
-                backupFiles = [...changedFilesSinceFull]; // Copia de archivos modificados/nuevos hasta el Día 3
+                backupFiles = [...new Set(changedFilesSinceFull.map(f => f.name))].map(name => ({
+                    name,
+                    action: changedFilesSinceFull.find(f => f.name === name).action
+                }));
                 changes.forEach(change => {
                     const [file, action] = change.split('_');
                     if (action !== 'del') {
                         backupFiles.push({ name: file, action: action });
                     }
                 });
+                backupFiles = [...new Set(backupFiles.map(f => JSON.stringify(f)))].map(str => JSON.parse(str));
                 backupSize = backupFiles.length * 100;
 
                 classicStorage += backupSize;
@@ -630,7 +700,6 @@
                     backupItem.classList.add('show');
                 }, 100);
             } else {
-                // Respaldo incremental para otros días
                 changes.forEach(change => {
                     const [file, action] = change.split('_');
                     if (action !== 'del') {
@@ -662,13 +731,11 @@
             let reutilizedBlocks = 0;
             let snapshotBlocks = [];
 
-            // Obtener todos los archivos que existen (no eliminados)
             const currentFiles = document.getElementById('modern-files').querySelectorAll('.file');
             const activeFiles = Array.from(currentFiles)
                 .filter(file => file.className !== 'file deleted')
                 .map(file => file.textContent);
 
-            // Para cada archivo activo, determinar qué bloque necesita
             activeFiles.forEach(fileName => {
                 const isModifiedToday = changes.some(change => change === fileName + '_mod');
                 const isNewToday = changes.some(change => change === fileName + '_new');
@@ -677,7 +744,15 @@
                     const newBlock = document.createElement('div');
                     newBlock.className = 'block unique';
                     newBlock.textContent = fileName + '1';
-                    dedupBlocks.appendChild(newBlock);
+                    const existingBlocks = Array.from(dedupBlocks.querySelectorAll('.block'));
+                    const lastBlockForFile = existingBlocks
+                        .filter(b => b.textContent.startsWith(fileName))
+                        .pop();
+                    if (lastBlockForFile) {
+                        lastBlockForFile.insertAdjacentElement('afterend', newBlock);
+                    } else {
+                        dedupBlocks.appendChild(newBlock);
+                    }
                     snapshotBlocks.push(fileName + '1');
                     newBlocksToday++;
                 } else if (isModifiedToday) {
@@ -690,7 +765,14 @@
                     const newBlock = document.createElement('div');
                     newBlock.className = 'block unique';
                     newBlock.textContent = fileName + nextVersion;
-                    dedupBlocks.appendChild(newBlock);
+                    const lastBlockForFile = Array.from(dedupBlocks.querySelectorAll('.block'))
+                        .filter(b => b.textContent.startsWith(fileName))
+                        .pop();
+                    if (lastBlockForFile) {
+                        lastBlockForFile.insertAdjacentElement('afterend', newBlock);
+                    } else {
+                        dedupBlocks.appendChild(newBlock);
+                    }
                     snapshotBlocks.push(fileName + nextVersion);
                     newBlocksToday++;
                 } else {
@@ -706,27 +788,56 @@
                 }
             });
 
-            // Colorear los bloques según su uso en este snapshot
             const allBlocks = dedupBlocks.querySelectorAll('.block');
+            const newBlocks = changes.map(change => {
+                const [file, action] = change.split('_');
+                if (action === 'new') return file + '1';
+                if (action === 'mod') {
+                    const existingVersions = Array.from(allBlocks)
+                        .filter(b => b.textContent.startsWith(file))
+                        .map(b => parseInt(b.textContent.replace(file, '')))
+                        .filter(v => !isNaN(v));
+                    return file + (existingVersions.length > 0 ? Math.max(...existingVersions) : 2);
+                }
+                return null;
+            }).filter(b => b);
+
             allBlocks.forEach(block => {
                 if (snapshotBlocks.includes(block.textContent)) {
-                    const isNewToday = changes.some(change => {
-                        const [file, action] = change.split('_');
-                        return block.textContent.startsWith(file) && (action === 'new' || action === 'mod');
-                    });
-                    block.className = isNewToday ? 'block unique' : 'block shared';
+                    block.className = newBlocks.includes(block.textContent) ? 'block unique' : 'block shared';
                 } else {
                     block.className = 'block inactive';
                 }
             });
 
-            const snapshotSize = snapshotBlocks.length * 100; // 100 MB por bloque en el snapshot
-            modernStorage += newBlocksToday * 100; // Solo los bloques nuevos añaden almacenamiento
+            const snapshotSize = snapshotBlocks.length * 100;
+            modernStorage += newBlocksToday * 100;
             snapshots++;
 
+            const snapshotBlocksHtml = snapshotBlocks.map(block =>
+                newBlocks.includes(block) ? `<span style="color: #e74c3c;">${block}</span>` : block
+            ).join('+');
+
             document.getElementById('snapshots-info').innerHTML =
-                '📸 Snapshot ' + snapshots + ': ' + snapshotBlocks.join('+') + ' (' + snapshotSize + ' MB)<br>' +
-                '<small>(nuevos hoy: ' + newBlocksToday + ', reutilizados: ' + reutilizedBlocks + ')</small>';
+                `📸 Snapshot ${snapshots}: ${snapshotBlocksHtml} (${snapshotSize} MB, ${newBlocksToday * 100} MB nuevos)<br>` +
+                `<small>(nuevos: ${newBlocksToday}, reutilizados: ${reutilizedBlocks})</small>`;
+
+            // Mostrar archivos duplicados en el Día 4
+            const duplicatedFilesContainer = document.getElementById('duplicated-files');
+            const duplicatedFilesRow = document.getElementById('duplicated-files-row');
+            const duplicationInfo = document.getElementById('duplication-info');
+            if (currentDay === 4) {
+                const duplicatedFiles = ['B', 'D', 'E', 'A', 'F']; // Archivos duplicados de días anteriores
+                duplicatedFilesRow.innerHTML = duplicatedFiles.map(file =>
+                    `<div class="duplicated-file">${file}</div>`
+                ).join('');
+                duplicatedFilesContainer.classList.add('show');
+                duplicationInfo.classList.add('show');
+            } else {
+                duplicatedFilesRow.innerHTML = '';
+                duplicatedFilesContainer.classList.remove('show');
+                duplicationInfo.classList.remove('show');
+            }
         }
 
         function updateStats() {
@@ -762,7 +873,11 @@
             document.getElementById('dedup-blocks').innerHTML =
                 '<div class="block unique">A1</div><div class="block unique">B1</div><div class="block unique">C1</div>';
             document.getElementById('snapshots-info').innerHTML =
-                '📸 Snapshot 1: A1+B1+C1 (300 MB)<br><small>(nuevos: 3, reutilizados: 0)</small>';
+                '📸 Snapshot 1: A1+B1+C1 (300 MB, 300 MB nuevos)<br><small>(nuevos: 3, reutilizados: 0)</small>';
+
+            document.getElementById('duplicated-files').classList.remove('show');
+            document.getElementById('duplicated-files-row').innerHTML = '';
+            document.getElementById('duplication-info').classList.remove('show');
 
             updateStats();
         }
