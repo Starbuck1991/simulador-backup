@@ -4,1155 +4,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estrategias de Backup - Secuencia Temporal</title>
+  <title>Doctor Windoze - Canal de YouTube</title>
   <style>
-    body {
-      font-family: "Arial", sans-serif;
+    * {
       margin: 0;
       padding: 0;
-      background: white;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000000;
       height: 100vh;
-      color: #333;
-      overflow-y: auto;
-      font-size: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
     }
 
     .container {
-      width: 100%;
-      min-height: 100vh;
-      margin: 0;
-      background: white;
-      padding: 15px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .strategy-selector {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-      align-items: center;
-    }
-
-    .strategy-btn {
-      background: linear-gradient(45deg, #3498db, #2980b9);
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 18px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.3s;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .strategy-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .strategy-btn.active {
-      background: linear-gradient(45deg, #e74c3c, #c0392b);
-    }
-
-    .storage-analysis {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 18px;
-      margin: 8px 0;
-      border-left: 4px solid #3498db;
-      flex-shrink: 0;
       text-align: center;
-      /* Alineación central para todo el bloque */
-    }
-
-    .storage-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      /* Centrado */
-    }
-
-    .storage-title::before {
-      content: "📊";
-      margin-right: 12px;
-      font-size: 24px;
-    }
-
-    .storage-stats {
-      display: flex;
-      justify-content: space-between;
-      gap: 2px;
-      margin-bottom: 8px;
-      width: 100%;
-      max-width: 1140px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 8px 6px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      min-height: 50px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      flex: 1;
-    }
-
-    .stat-card:nth-child(1) {
-      flex: 1.2;
-    }
-
-    .stat-card:nth-child(2) {
-      flex: 1.2;
-    }
-
-    .stat-card:nth-child(3) {
-      flex: 1.2;
-    }
-
-    .stat-card:nth-child(4) {
-      flex: 2.6;
-    }
-
-    .stat-card:nth-child(5) {
-      flex: 1.8;
-    }
-
-    .stat-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 1px;
-      line-height: 1.1;
-    }
-
-    .stat-label {
-      font-size: 10px;
-      color: #7f8c8d;
-      text-transform: uppercase;
-      margin-top: 2px;
-      font-weight: 400;
-      line-height: 1.2;
-    }
-
-    .storage-bar {
-      background: #ecf0f1;
-      height: 25px;
-      border-radius: 12px;
-      overflow: hidden;
       position: relative;
-      margin: 10px auto;
-      width: 100%;
-      max-width: 1140px;
     }
 
-    .storage-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #27ae60, #2ecc71);
-      border-radius: 12px;
-      transition: width 0.8s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .daily-breakdown {
-      display: flex;
-      flex-direction: column;
-      margin-top: 10px;
-      gap: 2px;
-      width: 100%;
-      max-width: 1140px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .daily-week {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: nowrap;
-      gap: 2px;
-      align-items: stretch;
-    }
-
-    .weekly-total {
-      background: linear-gradient(135deg, #3498db, #2980b9);
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      min-width: 120px;
-      min-height: 60px;
-      flex: 1.2;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      font-weight: 600;
-    }
-
-    .weekly-total-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-      opacity: 0.9;
-    }
-
-    .weekly-total-value {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .weekly-filesystem {
-      font-size: 14px;
-      margin-top: 2px;
-      opacity: 0.9;
-    }
-
-    .daily-item {
-      background: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      min-width: 80px;
-      min-height: 60px;
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .daily-day {
-      font-size: 14px;
-      color: #7f8c8d;
-      text-transform: uppercase;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .daily-size {
-      font-size: 18px;
-      font-weight: 600;
-      color: #2c3e50;
-      margin: 2px 0;
-      white-space: nowrap;
-    }
-
-    .daily-type {
-      font-size: 12px;
-      padding: 3px 6px;
-      border-radius: 10px;
-      margin-top: 4px;
-      font-weight: 500;
-    }
-
-    .type-completo {
-      background: #d5f4e6;
-      color: #27ae60;
-    }
-
-    .type-incremental {
-      background: #fef5e7;
-      color: #f39c12;
-    }
-
-    .type-diferencial {
-      background: #f4ecf7;
-      color: #9b59b6;
-    }
-
-    .legend {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 8px 0;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      background: white;
-      padding: 6px 10px;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-      font-size: 12px;
-      font-weight: 400;
-    }
-
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 3px;
-      margin-right: 8px;
-    }
-
-    .legend-nuevo {
-      background: #27ae60;
-    }
-
-    .legend-modificado {
-      background: #f39c12;
-    }
-
-    .legend-sin-cambios {
-      background: #95a5a6;
-    }
-
-    .legend-eliminado {
-      background: #e74c3c;
-    }
-
-    .timeline-container {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 10px;
-      margin: 8px 0;
-      flex-shrink: 0;
-      height: 220px;
-    }
-
-    .timeline {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      height: 100%;
-      padding: 4px;
-    }
-
-    .day-column {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .day-header {
-      text-align: center;
-      font-weight: 600;
-      font-size: 18px;
-      color: #2c3e50;
-      margin-bottom: 2px;
-      padding: 2px;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      flex-shrink: 0;
-    }
-
-    .files-section {
-      background: white;
-      border-radius: 6px;
-      padding: 2px;
-      margin-bottom: 2px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      min-height: 60px;
-      flex-grow: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .section-title {
-      font-size: 12px;
-      font-weight: 500;
-      margin-bottom: -2px;
-      text-transform: uppercase;
-      color: #7f8c8d;
-      text-align: center;
-      line-height: 1;
-    }
-
-    .files {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px;
-      justify-content: center;
-      /* Centrado horizontal */
-      flex-grow: 1;
-      align-items: center;
-      /* Centrado vertical */
-    }
-
-    .file {
+    .logo-container {
+      position: relative;
       display: inline-block;
-      width: 30px;
-      height: 30px;
-      margin: 1px;
-      border-radius: 4px;
-      font-size: 14px;
-      text-align: center;
-      line-height: 30px;
-      font-weight: 600;
-      color: white;
-      cursor: pointer;
-      transition: all 0.3s;
+      padding: 20px;
     }
 
-    .file:hover {
-      transform: scale(1.2);
+    .logo {
+      max-width: 400px;
+      max-height: 400px;
+      width: auto;
+      height: auto;
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease;
     }
 
-    .file.nuevo {
-      background: #27ae60;
+    .logo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
     }
 
-    .file.modificado {
-      background: #f39c12;
+    .channel-title {
+      color: #ffffff;
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-top: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: 2px;
     }
 
-    .file.sin_cambios {
-      background: #95a5a6;
+    .subtitle {
+      color: #cccccc;
+      font-size: 1.2rem;
+      margin-top: 15px;
+      font-weight: 300;
     }
 
-    .file.eliminado {
-      background: #e74c3c;
-    }
-
-    .backup-section {
-      background: white;
-      border-radius: 6px;
-      padding: 2px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      position: relative;
-      cursor: pointer;
-      transition: all 0.3s;
-      flex-grow: 2;
-      min-height: 92px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .backup-section:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .backup-section.completo {
-      border-left: 3px solid #27ae60;
-      background: linear-gradient(90deg, #d5f4e6, white);
-    }
-
-    .backup-section.incremental {
-      border-left: 3px solid #f39c12;
-      background: linear-gradient(90deg, #fef5e7, white);
-    }
-
-    .backup-section.diferencial {
-      border-left: 3px solid #9b59b6;
-      background: linear-gradient(90deg, #f4ecf7, white);
-    }
-
-    .backup-section.ninguno {
-      border-left: 3px solid #bdc3c7;
-      background: #ecf0f1;
-      opacity: 0.6;
-    }
-
-    .backup-type {
-      font-weight: 600;
-      font-size: 16px;
-      margin-bottom: 2px;
-      line-height: 1;
-      text-align: center;
-    }
-
-    .backup-size {
-      font-size: 18px;
-      font-weight: 600;
-      color: #2c3e50;
-      margin: 2px 0 -2px 0;
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .backup-files {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1px;
-      margin-top: -2px;
-      justify-content: center;
-      flex-grow: 1;
-      align-items: center;
-    }
-
-    .chain-indicator {
+    .glow-effect {
       position: absolute;
-      top: -5px;
-      right: -5px;
-      color: white;
+      top: 50%;
+      left: 50%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
       border-radius: 50%;
-      width: 25px;
-      height: 25px;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
+      animation: pulse 4s ease-in-out infinite;
+      pointer-events: none;
     }
 
-    .chain-indicator.incremental {
-      background: #f39c12;
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      50% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1.1);
+      }
     }
 
-    .chain-indicator.diferencial {
-      background: #9b59b6;
+    .upload-info {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #666666;
+      font-size: 0.9rem;
+      text-align: center;
     }
 
-    .chain-indicator.completo {
-      background: #27ae60;
+    /* Responsive */
+    @media (max-width: 768px) {
+      .logo {
+        max-width: 300px;
+        max-height: 300px;
+      }
+
+      .channel-title {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
     }
 
-    .view-toggle {
-      display: none;
-    }
+    @media (max-width: 480px) {
+      .logo {
+        max-width: 250px;
+        max-height: 250px;
+      }
 
-    #strategy-description p {
-      margin: 6px 0;
-      font-size: 18px;
+      .channel-title {
+        font-size: 1.5rem;
+      }
     }
   </style>
 </head>
 
 <body>
+  <div class="glow-effect"></div>
+
   <div class="container">
-    <div class="strategy-selector">
-      <button type="button" class="strategy-btn active" onclick="setStrategy('weekly')">
-        📅 Semanal: Completo Lunes + Incremental
-      </button>
-      <button type="button" class="strategy-btn" onclick="setStrategy('mixed')">
-        🔄 Mixta: Completo + Diferencial + Incremental
-      </button>
-      <button type="button" class="strategy-btn" onclick="setStrategy('daily_full')">
-        💾 Completo Diario (Costoso pero Seguro)
-      </button>
+    <div class="logo-container">
+      <img src="img/logo.gif" alt="Doctor Windoze Logo" class="logo" id="logoImg">
     </div>
 
-    <div class="storage-analysis" id="storage-analysis">
-      <div class="storage-title">Análisis de Almacenamiento (2 Semanas)</div>
-      <div class="storage-stats">
-        <div class="stat-card">
-          <div class="stat-value" id="filesystem-size">0 GB</div>
-          <div class="stat-label">Sistema de Archivos</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="total-storage">0 GB</div>
-          <div class="stat-label">Total Backups</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="avg-daily">0 GB</div>
-          <div class="stat-label">Promedio Diario</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="efficiency">0%</div>
-          <div class="stat-label">Eficiencia vs Completo Diario</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="recovery-risk">Bajo</div>
-          <div class="stat-label">Riesgo de Recuperación</div>
-        </div>
-      </div>
-      <div class="storage-bar">
-        <div class="storage-fill" id="storage-fill">
-          0% del espacio máximo
-        </div>
-      </div>
-      <div class="daily-breakdown" id="daily-breakdown">
-        <!-- Se generará dinámicamente con dos filas -->
-      </div>
-    </div>
+    <p class="subtitle">Canal de YouTube</p>
+  </div>
 
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color legend-nuevo"></div>
-        <span>Nuevo</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color legend-modificado"></div>
-        <span>Modificado</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color legend-sin-cambios"></div>
-        <span>Sin cambios</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color legend-eliminado"></div>
-        <span>Eliminado</span>
-      </div>
-    </div>
-
-    <div class="timeline-container">
-      <div class="timeline-wrapper">
-        <div class="week-container week-1">
-          <div class="week-title">📅 Semana 1</div>
-          <div class="timeline" id="timeline-week1">
-            <!-- Se generará dinámicamente -->
-          </div>
-        </div>
-        <div class="week-container week-2">
-          <div class="week-title">📅 Semana 2</div>
-          <div class="timeline" id="timeline-week2">
-            <!-- Se generará dinámicamente -->
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div class="upload-info">
+    <p>Logo animado cargado desde img/logo.gif</p>
   </div>
 
   <script>
-    let currentStrategy = "weekly";
-    let incrementalCount = 0; // Contador para backups incrementales
-    let diferencialCount = 0; // Contador para backups diferenciales
-    let completoCount = 0; // Contador para backups completos
+    // Asegurar que el GIF se reproduzca en bucle
+    const logo = document.getElementById('logoImg');
 
-    const strategies = {
-      weekly: {
-        name: "Estrategia Semanal",
-        description:
-          "Backup completo los lunes, incrementales el resto de la semana. Común en empresas.",
-        pattern: [
-          // Semana 1
-          "completo", "incremental", "incremental", "incremental", "incremental", "incremental", "incremental",
-          // Semana 2
-          "completo", "incremental", "incremental", "incremental", "incremental", "incremental", "incremental"
-        ],
-        pros: "Equilibrio entre espacio y tiempo",
-        cons: "Recuperación requiere múltiples backups",
-        riskLevel: "Medio",
-      },
-      mixed: {
-        name: "Estrategia Mixta",
-        description:
-          "Combina todos los tipos: Completo el lunes, diferencial miércoles y viernes, incremental otros días.",
-        pattern: [
-          // Semana 1
-          "completo", "incremental", "diferencial", "incremental", "diferencial", "incremental", "incremental",
-          // Semana 2
-          "completo", "incremental", "diferencial", "incremental", "diferencial", "incremental", "incremental"
-        ],
-        pros: "Mejor balance para recuperación",
-        cons: "Más complejo de gestionar",
-        riskLevel: "Bajo",
-      },
-      daily_full: {
-        name: "Backup Completo Diario",
-        description:
-          "Backup completo todos los días. Máxima seguridad pero costoso en espacio y tiempo.",
-        pattern: [
-          // Semana 1
-          "completo", "completo", "completo", "completo", "completo", "completo", "completo",
-          // Semana 2
-          "completo", "completo", "completo", "completo", "completo", "completo", "completo"
-        ],
-        pros: "Recuperación inmediata desde cualquier día",
-        cons: "Muy costoso en espacio y tiempo",
-        riskLevel: "Mínimo",
-      },
-    };
-
-    const fileStates = {
-      // SEMANA 1
-      day1: { A: "nuevo", B: "nuevo", C: "nuevo" },
-      day2: {
-        A: "sin_cambios",
-        B: "modificado",
-        C: "sin_cambios",
-        D: "nuevo",
-        E: "nuevo",
-      },
-      day3: {
-        A: "sin_cambios",
-        B: "sin_cambios",
-        C: "sin_cambios",
-        D: "sin_cambios",
-        E: "sin_cambios",
-      },
-      day4: {
-        A: "sin_cambios",
-        B: "modificado",
-        C: "eliminado",
-        D: "sin_cambios",
-        E: "sin_cambios",
-      },
-      day5: {
-        A: "sin_cambios",
-        B: "sin_cambios",
-        D: "modificado",
-        E: "sin_cambios",
-        F: "nuevo",
-      },
-      day6: {
-        A: "modificado",
-        B: "sin_cambios",
-        D: "sin_cambios",
-        E: "eliminado",
-        F: "sin_cambios",
-        G: "nuevo",
-      },
-      day7: {
-        A: "sin_cambios",
-        B: "modificado",
-        D: "sin_cambios",
-        F: "modificado",
-        G: "sin_cambios",
-        H: "nuevo",
-      },
-      // SEMANA 2
-      day8: {
-        A: "sin_cambios",
-        B: "sin_cambios",
-        D: "eliminado",
-        F: "sin_cambios",
-        G: "modificado",
-        H: "sin_cambios",
-      },
-      day9: {
-        A: "modificado",
-        B: "sin_cambios",
-        F: "sin_cambios",
-        G: "sin_cambios",
-        H: "sin_cambios",
-        I: "modificado",
-        J: "nuevo",
-      },
-      day10: {
-        A: "sin_cambios",
-        B: "modificado",
-        F: "modificado",
-        G: "sin_cambios",
-        I: "sin_cambios",
-        J: "sin_cambios",
-        K: "nuevo",
-        L: "nuevo",
-      },
-      day11: {
-        A: "sin_cambios",
-        B: "sin_cambios",
-        F: "sin_cambios",
-        G: "sin_cambios",
-        I: "sin_cambios",
-        J: "sin_cambios",
-        K: "sin_cambios",
-        L: "sin_cambios",
-      },
-      day12: {
-        A: "sin_cambios",
-        B: "sin_cambios",
-        F: "sin_cambios",
-        G: "sin_cambios",
-        I: "sin_cambios",
-        J: "sin_cambios",
-        K: "sin_cambios",
-        L: "sin_cambios",
-      },
-      day13: {
-        A: "sin_cambios",
-        B: "modificado",
-        F: "modificado",
-        G: "sin_cambios",
-        I: "sin_cambios",
-        J: "sin_cambios",
-        L: "modificado",
-        M: "sin_cambios",
-        N: "nuevo",
-      },
-      day14: {
-        A: "sin_cambios",
-        B: "sin_cambios",
-        F: "sin_cambios",
-        G: "modificado",
-        I: "sin_cambios",
-        J: "modificado",
-        L: "sin_cambios",
-        M: "eliminado",
-        N: "modificado",
-        O: "nuevo",
-      },
-    };
-
-    function setStrategy(strategy) {
-      currentStrategy = strategy;
-      incrementalCount = 0; // Reiniciar contador incremental
-      diferencialCount = 0; // Reiniciar contador diferencial
-      completoCount = 0; // Reiniciar contador completo
-
-      document
-        .querySelectorAll(".strategy-btn")
-        .forEach((btn) => btn.classList.remove("active"));
-      event.target.classList.add("active");
-
-      generateTimeline();
-      updateStorageAnalysis();
-    }
-
-    function updateStorageAnalysis() {
-      const pattern = strategies[currentStrategy].pattern;
-      const days = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-      let totalStorage = 0;
-      let dailySizes = [];
-
-      // Calcular tamaño del sistema de archivos (último día)
-      const lastDayFiles = fileStates["day14"];
-      const filesystemFiles = Object.entries(lastDayFiles).filter(
-        ([fileName, state]) => state !== "eliminado"
-      ).length;
-      const filesystemSize = (filesystemFiles * 100) / 1000; // en GB
-
-      for (let i = 0; i < 14; i++) {
-        const dayKey = `day${i + 1}`;
-        const backupType = pattern[i];
-        const backedUpFiles = getBackedUpFiles(dayKey, backupType, i);
-        const sizeInMB = backedUpFiles.length * 100; // Cambiado a 100 MB
-        const sizeInGB = sizeInMB / 1000;
-
-        const weekNumber = Math.floor(i / 7) + 1;
-        const dayInWeek = i % 7;
-
-        dailySizes.push({
-          day: `S${weekNumber} ${days[dayInWeek]}`,
-          size: sizeInGB,
-          type: backupType,
-          files: backedUpFiles.length,
-        });
-
-        totalStorage += sizeInGB;
-      }
-
-      let dailyFullTotalStorage = 0;
-      for (let i = 0; i < 14; i++) {
-        const dayKey = `day${i + 1}`;
-        const currentFiles = fileStates[dayKey];
-        const existingFiles = Object.entries(currentFiles).filter(
-          ([fileName, state]) => state !== "eliminado"
-        ).length;
-        const dailyFullSize = (existingFiles * 100) / 1000; // Cambiado a 100 MB
-        dailyFullTotalStorage += dailyFullSize;
-      }
-
-      let efficiency = 0;
-      if (currentStrategy === "daily_full") {
-        efficiency = 0;
-      } else {
-        efficiency = Math.round(
-          ((dailyFullTotalStorage - totalStorage) / dailyFullTotalStorage) * 100
-        );
-      }
-
-      document.getElementById("filesystem-size").textContent = `${filesystemSize
-        .toFixed(1)
-        .replace(".", ",")} GB`;
-      document.getElementById("total-storage").textContent = `${totalStorage
-        .toFixed(1)
-        .replace(".", ",")} GB`;
-      document.getElementById("avg-daily").textContent = `${(totalStorage / 14)
-        .toFixed(1)
-        .replace(".", ",")} GB`;
-      document.getElementById("efficiency").textContent = `${Math.max(
-        0,
-        efficiency
-      )}% vs Completo Diario`;
-      document.getElementById("recovery-risk").textContent =
-        strategies[currentStrategy].riskLevel;
-
-      const storagePercentage = Math.min(
-        100,
-        (totalStorage / dailyFullTotalStorage) * 100
-      );
-      const storageFill = document.getElementById("storage-fill");
-      storageFill.style.width = `${storagePercentage}%`;
-      storageFill.textContent = `${Math.round(
-        storagePercentage
-      )}% del espacio máximo`;
-
-      // Calcular sistema de archivos: total semana 1 e incremento semana 2
-      const week1EndFiles = Object.entries(fileStates["day7"]).filter(
-        ([fileName, state]) => state !== "eliminado"
-      ).length;
-      const week1FilesystemTotal = (week1EndFiles * 100) / 1000;
-
-      const week2StartFiles = Object.entries(fileStates["day7"]).filter(
-        ([fileName, state]) => state !== "eliminado"
-      ).length;
-      const week2EndFiles = Object.entries(fileStates["day14"]).filter(
-        ([fileName, state]) => state !== "eliminado"
-      ).length;
-      const week2FilesystemIncrement = ((week2EndFiles - week2StartFiles) * 100) / 1000;
-
-      // Mostrar las dos semanas en dos filas alineadas con totales semanales
-      const week1Sizes = dailySizes.slice(0, 7);
-      const week2Sizes = dailySizes.slice(7, 14);
-
-      const week1Total = week1Sizes.reduce((sum, day) => sum + day.size, 0);
-      const week2Total = week2Sizes.reduce((sum, day) => sum + day.size, 0);
-
-      const dailyBreakdown = document.getElementById("daily-breakdown");
-      dailyBreakdown.innerHTML = `
-        <div class="daily-week">
-          ${week1Sizes
-          .map(
-            (day) => `
-                <div class="daily-item">
-                    <div class="daily-day">${day.day.replace('S1 ', '')}</div>
-                    <div class="daily-size">${day.size
-                .toFixed(1)
-                .replace(".", ",")} GB</div>
-                    <div class="daily-type type-${day.type}">${day.type.charAt(0).toUpperCase() + day.type.slice(1)
-              }</div>
-                </div>
-            `
-          )
-          .join("")}
-          <div class="weekly-total">
-            <div class="weekly-total-label">Total Semana 1</div>
-            <div class="weekly-total-value">${week1Total.toFixed(1).replace(".", ",")} GB</div>
-            <div class="weekly-filesystem">Real: ${week1FilesystemTotal.toFixed(1).replace(".", ",")} GB</div>
-          </div>
-        </div>
-        <div class="daily-week">
-          ${week2Sizes
-          .map(
-            (day) => `
-                <div class="daily-item">
-                    <div class="daily-day">${day.day.replace('S2 ', '')}</div>
-                    <div class="daily-size">${day.size
-                .toFixed(1)
-                .replace(".", ",")} GB</div>
-                    <div class="daily-type type-${day.type}">${day.type.charAt(0).toUpperCase() + day.type.slice(1)
-              }</div>
-                </div>
-            `
-          )
-          .join("")}
-          <div class="weekly-total">
-            <div class="weekly-total-label">Total Semana 2</div>
-            <div class="weekly-total-value">+${week2Total.toFixed(1).replace(".", ",")} GB</div>
-            <div class="weekly-filesystem">Real: ${week2FilesystemIncrement >= 0 ? '+' : ''}${week2FilesystemIncrement.toFixed(1).replace(".", ",")} GB</div>
-          </div>
-        </div>
-      `;
-    }
-
-    function generateTimeline() {
-      const pattern = strategies[currentStrategy].pattern;
-      const days = [
-        "Lunes",
-        "Martes",
-        "Miércoles",
-        "Jueves",
-        "Viernes",
-        "Sábado",
-        "Domingo",
-      ];
-
-      // Limpiar contadores
-      incrementalCount = 0;
-      diferencialCount = 0;
-      completoCount = 0;
-
-      // Generar semana 1
-      const timelineWeek1 = document.getElementById("timeline-week1");
-      timelineWeek1.innerHTML = "";
-
-      for (let i = 0; i < 7; i++) {
-        const dayKey = `day${i + 1}`;
-        const dayColumn = document.createElement("div");
-        dayColumn.className = "day-column";
-        dayColumn.innerHTML = generateDayColumn(dayKey, pattern[i], i, days[i]);
-        timelineWeek1.appendChild(dayColumn);
-      }
-
-      // Generar semana 2
-      const timelineWeek2 = document.getElementById("timeline-week2");
-      timelineWeek2.innerHTML = "";
-
-      for (let i = 7; i < 14; i++) {
-        const dayKey = `day${i + 1}`;
-        const dayColumn = document.createElement("div");
-        dayColumn.className = "day-column";
-        const dayInWeek = i % 7;
-        dayColumn.innerHTML = generateDayColumn(dayKey, pattern[i], i, days[dayInWeek]);
-        timelineWeek2.appendChild(dayColumn);
-      }
-    }
-
-    function generateDayColumn(dayKey, backupType, dayIndex, dayName) {
-      return `
-        <div class="day-header">${dayName}</div>
-        
-        <div class="files-section">
-            <div class="section-title">Sistema de Archivos</div>
-            <div class="files" id="files-${dayKey}">
-                ${generateFilesHtml(dayKey)}
-            </div>
-        </div>
-        
-        <div class="backup-section ${backupType}" id="backup-${dayKey}" onclick="showBackupDetails('${dayKey}', '${backupType}')">
-            <div class="backup-type">${getBackupTypeName(backupType)}</div>
-            <div class="backup-size">${calculateBackupSize(dayKey, backupType, dayIndex)}</div>
-            <div class="backup-files">
-                ${generateBackupFilesHtml(dayKey, backupType, dayIndex)}
-            </div>
-            ${backupType === "incremental"
-          ? `<div class="chain-indicator incremental">${++incrementalCount}</div>`
-          : backupType === "diferencial"
-            ? `<div class="chain-indicator diferencial">${++diferencialCount}</div>`
-            : backupType === "completo"
-              ? `<div class="chain-indicator completo">${++completoCount}</div>`
-              : ""
-        }
-        </div>
-      `;
-    }
-
-    function generateFilesHtml(dayKey) {
-      const files = fileStates[dayKey];
-      let html = "";
-
-      Object.entries(files).forEach(([fileName, state]) => {
-        const stateNames = {
-          nuevo: "Nuevo",
-          modificado: "Modificado",
-          sin_cambios: "Sin cambios",
-          eliminado: "Eliminado",
-        };
-        const displayState = stateNames[state] || state;
-        html += `<div class="file ${state}" title="Archivo ${fileName} - ${displayState}">${fileName}</div>`;
-      });
-
-      return html;
-    }
-
-    function generateBackupFilesHtml(dayKey, backupType, dayIndex) {
-      if (backupType === "ninguno") return "";
-
-      const files = getBackedUpFiles(dayKey, backupType, dayIndex);
-      let html = "";
-
-      files.forEach((fileName) => {
-        const state = fileStates[dayKey][fileName] || "sin_cambios";
-        const stateNames = {
-          nuevo: "Nuevo",
-          modificado: "Modificado",
-          sin_cambios: "Sin cambios",
-          eliminado: "Eliminado",
-        };
-        const displayState = stateNames[state] || state;
-        html += `<div class="file ${state}" title="Archivo ${fileName} - ${displayState}">${fileName}</div>`;
-      });
-
-      return html;
-    }
-
-    function getBackedUpFiles(dayKey, backupType, dayIndex) {
-      const currentFiles = fileStates[dayKey];
-      const backedUpFiles = [];
-
-      switch (backupType) {
-        case "completo":
-          Object.entries(currentFiles).forEach(([fileName, state]) => {
-            if (state !== "eliminado") {
-              backedUpFiles.push(fileName);
-            }
-          });
-          break;
-
-        case "incremental":
-          Object.entries(currentFiles).forEach(([fileName, state]) => {
-            if (state === "nuevo" || state === "modificado") {
-              backedUpFiles.push(fileName);
-            }
-          });
-          break;
-
-        case "diferencial":
-          const lastFullIndex = findLastFullBackup(dayIndex);
-          for (let i = lastFullIndex + 1; i <= dayIndex; i++) {
-            const dayFiles = fileStates[`day${i + 1}`];
-            Object.entries(dayFiles).forEach(([fileName, state]) => {
-              if (
-                (state === "nuevo" || state === "modificado") &&
-                !backedUpFiles.includes(fileName)
-              ) {
-                backedUpFiles.push(fileName);
-              }
-            });
-          }
-          break;
-      }
-
-      return backedUpFiles;
-    }
-
-    function findLastFullBackup(currentIndex) {
-      const pattern = strategies[currentStrategy].pattern;
-      for (let i = currentIndex - 1; i >= 0; i--) {
-        if (pattern[i] === "completo") {
-          return i;
-        }
-      }
-      return 0;
-    }
-
-    function calculateBackupSize(dayKey, backupType, dayIndex) {
-      const backedUpFiles = getBackedUpFiles(dayKey, backupType, dayIndex);
-      const baseSize = 100; // Cambiado a 100 MB
-      const totalSize = backedUpFiles.length * baseSize;
-
-      if (totalSize >= 1000) {
-        return `${(totalSize / 1000).toFixed(1).replace(".", ",")} GB`;
-      } else {
-        return `${totalSize} MB`;
-      }
-    }
-
-    function getBackupTypeName(type) {
-      const names = {
-        completo: "💾 Backup Completo",
-        incremental: "⚡ Incremental",
-        diferencial: "🔄 Diferencial",
-        ninguno: "❌ Sin Backup",
-      };
-      return names[type] || type;
-    }
-
-    function showBackupDetails(dayKey, backupType) {
-      document
-        .querySelectorAll(".backup-section")
-        .forEach((el) => (el.style.border = ""));
-      document.getElementById(`backup-${dayKey}`).style.border = "3px solid #e74c3c";
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      generateTimeline();
-      updateStorageAnalysis();
+    // Forzar recarga del GIF para reiniciar la animación si es necesario
+    logo.addEventListener('load', function () {
+      // El GIF debería reproducirse en bucle automáticamente
+      console.log('Logo cargado correctamente');
     });
+
+    // Opcional: reiniciar GIF al hacer clic
+    logo.addEventListener('click', function () {
+      const src = this.src;
+      this.src = '';
+      this.src = src;
+    });
+
+    // Efecto de partículas opcional (comentado por defecto)
+    /*
+    function createParticles() {
+        const container = document.querySelector('.container');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '2px';
+            particle.style.height = '2px';
+            particle.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+            particle.style.borderRadius = '50%';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animation = `float ${3 + Math.random() * 4}s ease-in-out infinite`;
+            container.appendChild(particle);
+        }
+    }
+    */
   </script>
 </body>
 
